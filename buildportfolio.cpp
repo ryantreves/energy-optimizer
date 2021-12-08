@@ -6,14 +6,61 @@
 
 using namespace std;
 
+// Creating the basic struct for the program, `Generator`
 struct Generator {
     int capacity;
     int emissions;
     int cost;
 };
 
+// Two recursive solutions to the problem are coded below, followed by test cases. See problem writeup for more details. 
 
-// Solution B Helper
+// Solution A Helper Function
+void portfolioHelper(Vector<Generator>& generators, int demand, string optimize, int current, int& best,
+                     Vector<Generator>& currentPortfolio,
+                     Vector<Generator>& bestPortfolio) {
+    // Base cases
+    if (demand <= 0 || generators.isEmpty()) {
+        if (current != 0 && (best == -1 || best > current)) {
+            best = current;
+            bestPortfolio = currentPortfolio;
+        }
+        return;
+    }
+
+    // Examine the first generator
+    Generator gen = generators.remove(0);
+
+    // Recurse through remaining generators without adding it
+    portfolioHelper(generators, demand, optimize, current, best, currentPortfolio, bestPortfolio);
+
+    // Add either cost or emissions to current total
+    if (optimize == "budget") {
+        current += gen.cost;
+    }
+    else {
+        current += gen.emissions;
+    }
+    currentPortfolio.add(gen);
+    // Recurse through remaining generators with adding it
+    portfolioHelper(generators, demand - gen.capacity, optimize, current, best, currentPortfolio, bestPortfolio);
+    currentPortfolio.remove(currentPortfolio.size() - 1);
+
+    generators.add(gen);
+
+}
+
+// Solution A
+Vector<Generator> buildPortfolio(Vector<Generator> generators, string optimize, int demand) {
+    int best = -1;
+    Vector<Generator> currentPortfolio = {};
+    Vector<Generator> bestPortfolio = {};
+    portfolioHelper(generators, demand, optimize, 0, best, currentPortfolio, bestPortfolio);
+
+    return bestPortfolio;
+}
+
+// Solution B Helper Function
 void portfolioHelperPrunes(Vector<Generator>& generators, int demand, string optimize, int current, int& best,
                      Vector<Generator>& currentPortfolio,
                      Vector<Generator>& bestPortfolio) {
@@ -63,10 +110,6 @@ Vector<Generator> buildPortfolioPrunes(Vector<Generator> generators, string opti
 
     return bestPortfolio;
 }
-
-
-
-
 
 // Test cases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -244,49 +287,4 @@ STUDENT_TEST("Solution B larger test") {
         EXPECT_EQUAL(portfolio[i].emissions, exp[i].emissions);
         EXPECT_EQUAL(portfolio[i].cost, exp[i].cost);
     }
-}
-
-// Solution A
-Vector<Generator> buildPortfolio(Vector<Generator> generators, string optimize, int demand) {
-    int best = -1;
-    Vector<Generator> currentPortfolio = {};
-    Vector<Generator> bestPortfolio = {};
-    portfolioHelper(generators, demand, optimize, 0, best, currentPortfolio, bestPortfolio);
-
-    return bestPortfolio;
-}
-
-// Solution A Helper
-void portfolioHelper(Vector<Generator>& generators, int demand, string optimize, int current, int& best,
-                     Vector<Generator>& currentPortfolio,
-                     Vector<Generator>& bestPortfolio) {
-    // Base cases
-    if (demand <= 0 || generators.isEmpty()) {
-        if (current != 0 && (best == -1 || best > current)) {
-            best = current;
-            bestPortfolio = currentPortfolio;
-        }
-        return;
-    }
-
-    // Examine the first generator
-    Generator gen = generators.remove(0);
-
-    // Recurse through remaining generators without adding it
-    portfolioHelper(generators, demand, optimize, current, best, currentPortfolio, bestPortfolio);
-
-    // Add either cost or emissions to current total
-    if (optimize == "budget") {
-        current += gen.cost;
-    }
-    else {
-        current += gen.emissions;
-    }
-    currentPortfolio.add(gen);
-    // Recurse through remaining generators with adding it
-    portfolioHelper(generators, demand - gen.capacity, optimize, current, best, currentPortfolio, bestPortfolio);
-    currentPortfolio.remove(currentPortfolio.size() - 1);
-
-    generators.add(gen);
-
 }
